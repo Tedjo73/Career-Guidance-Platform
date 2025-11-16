@@ -16,7 +16,7 @@ import { db } from '../lib/firebase';
 import { toast } from 'sonner@2.0.3';
 
 export const StudentDashboard: React.FC = () => {
-  const { user } = useAuth();
+  const { user, userProfile } = useAuth();
   const [institutions, setInstitutions] = useState<any[]>([]);
   const [selectedInstitution, setSelectedInstitution] = useState('');
   const [courses, setCourses] = useState<any[]>([]);
@@ -27,6 +27,8 @@ export const StudentDashboard: React.FC = () => {
   const [transcript, setTranscript] = useState('');
   const [certificates, setCertificates] = useState('');
   const [multipleAdmissions, setMultipleAdmissions] = useState<any[]>([]);
+
+  const isGraduated = !!userProfile?.profile?.graduated;
 
   useEffect(() => {
     loadData();
@@ -324,42 +326,54 @@ export const StudentDashboard: React.FC = () => {
           <Card>
             <CardHeader>
               <CardTitle>Job Opportunities</CardTitle>
-              <CardDescription>Explore career opportunities from partner companies</CardDescription>
+              <CardDescription>
+                {isGraduated
+                  ? 'Explore career opportunities from partner companies'
+                  : 'Job opportunities unlock once your institution marks you as graduated.'}
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid md:grid-cols-2 gap-4">
-                {jobs.map((job: any) => (
-                  <Card key={job.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{job.title}</CardTitle>
-                          <CardDescription>{job.companyName}</CardDescription>
+              {!isGraduated ? (
+                <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 p-6 text-center text-gray-600">
+                  Your institution has not promoted you to graduate yet. Once they mark you as
+                  graduated, job opportunities and applications will become available.
+                </div>
+              ) : (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {jobs.map((job: any) => (
+                    <Card key={job.id}>
+                      <CardHeader>
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <CardTitle className="text-lg">{job.title}</CardTitle>
+                            <CardDescription>{job.companyName}</CardDescription>
+                          </div>
+                          <Briefcase className="w-5 h-5 text-purple-600" />
                         </div>
-                        <Briefcase className="w-5 h-5 text-purple-600" />
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2 text-sm mb-4">
-                        <div className="text-gray-600">Location: {job.location}</div>
-                        <div className="text-gray-600">Type: {job.type}</div>
-                        <div className="text-gray-700">{job.description}</div>
-                      </div>
-                      <Button 
-                        className="w-full"
-                        onClick={() => handleApplyJob(job.id)}
-                      >
-                        Apply Now
-                      </Button>
-                    </CardContent>
-                  </Card>
-                ))}
-                {jobs.length === 0 && (
-                  <div className="col-span-2 text-center py-8 text-gray-500">
-                    No job opportunities available at the moment
-                  </div>
-                )}
-              </div>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="mb-4 space-y-2 text-sm">
+                          <div className="text-gray-600">Location: {job.location}</div>
+                          <div className="text-gray-600">Type: {job.type}</div>
+                          <div className="text-gray-700">{job.description}</div>
+                        </div>
+                        <Button
+                          className="w-full"
+                          onClick={() => handleApplyJob(job.id)}
+                          disabled={!isGraduated}
+                        >
+                          Apply Now
+                        </Button>
+                      </CardContent>
+                    </Card>
+                  ))}
+                  {jobs.length === 0 && (
+                    <div className="col-span-2 py-8 text-center text-gray-500">
+                      No job opportunities available at the moment
+                    </div>
+                  )}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

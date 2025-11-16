@@ -1,323 +1,221 @@
-# 🎓 Career Gateway Lesotho
-
-A comprehensive Career Guidance and Employment Integration Web Application Platform designed to connect high school students with higher learning institutions and employment opportunities in Lesotho.
-
-## 🌟 Live Demo
-
-**[Insert Your Deployed URL Here]**
-
-## 📋 Project Overview
-
-This platform assists high school students in:
-- Discovering higher learning institutions in Lesotho
-- Browsing courses and programs offered
-- Applying online to multiple institutions
-- Tracking application status in real-time
-- Uploading transcripts and certificates after graduation
-- Connecting with partner companies for employment opportunities
-
-## 🏗️ System Architecture
-
-### Frontend
-- **React.js** with TypeScript
-- **Tailwind CSS** for styling
-- **Shadcn/UI** component library
-- Responsive design for mobile and desktop
-
-### Backend
-- **Firebase Authentication** for user management
-- **Firestore Database** for data storage
-- **Firebase Storage** for file uploads
-- Serverless architecture with automatic scaling
-
-### Hosting
-- Deployed on [Vercel/Firebase/Netlify]
-- Continuous deployment from GitHub
-
-## 👥 User Roles & Features
-
-### 1. 👨‍💼 Admin Module
-- ✅ Manage higher learning institutions
-- ✅ Add/edit/delete faculties and courses
-- ✅ Approve institution and company registrations
-- ✅ Monitor system activity and registered users
-- ✅ View comprehensive reports
-- ✅ Manage company accounts (approve/suspend/delete)
-
-### 2. 🏛️ Institution Module
-- ✅ Register with email verification
-- ✅ Add and manage faculties
-- ✅ Add and manage courses
-- ✅ Review student applications
-- ✅ Publish admission results
-- ✅ Manage student status (admitted/rejected/waiting list)
-- ✅ Automated waiting list management
-- ✅ Update institution profile
-
-### 3. 👨‍🎓 Student Module
-- ✅ Register with email verification
-- ✅ Browse institutions and courses
-- ✅ Apply for up to 2 courses per institution
-- ✅ View application status in real-time
-- ✅ Select between multiple admissions
-- ✅ Upload academic transcripts and certificates
-- ✅ View and apply for job postings
-- ✅ Receive job notifications matching profile
-
-### 4. 🏢 Company Module
-- ✅ Register with email verification
-- ✅ Post job opportunities with requirements
-- ✅ View automatically filtered applicants based on:
-  - Academic performance
-  - Extra certificates
-  - Work experience
-  - Job relevance
-- ✅ Update company profile
-
-## 🔐 Business Rules Implemented
-
-- ✅ Students can apply to maximum 2 courses per institution
-- ✅ Institutions cannot admit same student to multiple programs
-- ✅ Students cannot apply for courses they don't qualify for
-- ✅ Automatic waiting list management
-- ✅ When student selects one admission, first waiting list student promoted
-- ✅ Only qualified students receive job notifications
-- ✅ Institutions and companies require admin approval
-
-## 🚀 Getting Started
-
-### Prerequisites
-```bash
-Node.js >= 16.x
-npm or yarn
-Firebase account
-```
-
-### Installation
-
-1. **Clone the repository:**
-```bash
-git clone https://github.com/YOUR_USERNAME/career-gateway-lesotho.git
-cd career-gateway-lesotho
-```
-
-2. **Install dependencies:**
-```bash
-npm install
-```
-
-3. **Configure Firebase:**
-   - Create a Firebase project at [console.firebase.google.com](https://console.firebase.google.com)
-   - Enable Authentication (Email/Password)
-   - Create Firestore Database
-   - Enable Storage
-   - Copy your Firebase config to `/lib/firebase.ts`
-
-4. **Run development server:**
-```bash
-npm run dev
-```
-
-5. **Open browser:**
-```
-http://localhost:5173
-```
-
-## 📖 Detailed Setup
-
-See [SETUP.md](./SETUP.md) for complete setup instructions including:
-- Firebase configuration
-- Creating admin accounts
-- Firestore security rules
-- Test user accounts
-- Deployment instructions
-
-## 🛠️ Tech Stack
-
-| Category | Technology |
-|----------|------------|
-| Frontend Framework | React.js 18+ |
-| Language | TypeScript |
-| Styling | Tailwind CSS v4 |
-| UI Components | Shadcn/UI |
-| Backend | Firebase (Node.js based) |
-| Database | Firestore (NoSQL) |
-| Authentication | Firebase Auth |
-| Storage | Firebase Storage |
-| Hosting | Vercel/Firebase/Netlify |
-| Version Control | Git & GitHub |
-
-## 📁 Project Structure
-
-```
-career-gateway-lesotho/
-├── components/
-│   ├── AdminDashboard.tsx       # Admin management interface
-│   ├── InstituteDashboard.tsx   # Institution management
-│   ├── StudentDashboard.tsx     # Student portal
-│   ├── CompanyDashboard.tsx     # Company portal
-│   ├── AuthForms.tsx            # Login/Registration
-│   ├── LandingPage.tsx          # Home page
-│   ├── Layout.tsx               # App layout wrapper
-│   └── ui/                      # Reusable UI components
-├── contexts/
-│   └── AuthContext.tsx          # Authentication state
-├── lib/
-│   ├── firebase.ts              # Firebase configuration
-│   ├── auth.ts                  # Auth helpers
-│   └── firestore.ts             # Database operations
-├── styles/
-│   └── globals.css              # Global styles
-├── App.tsx                       # Main app component
-└── README.md                     # This file
-```
-
-## 🧪 Testing
-
-### Test Accounts
-
-**Admin:**
-- Email: admin@careergateway.ls
-- Password: Admin123!
-
-**Institution:**
-- Email: nul@university.ls
-- Password: Test123!
-
-**Student:**
-- Email: student@test.ls
-- Password: Test123!
-
-**Company:**
-- Email: company@business.ls
-- Password: Test123!
-
-### Test Workflows
-
-1. **Student Application Flow:**
-   - Register → Browse Courses → Apply → Track Status → Upload Documents → Apply for Jobs
-
-2. **Institution Flow:**
-   - Register → Wait for Approval → Add Faculties/Courses → Review Applications → Admit Students
-
-3. **Company Flow:**
-   - Register → Wait for Approval → Post Jobs → View Qualified Applicants
-
-4. **Admin Flow:**
-   - Login → Manage Institutions → Approve Accounts → View Reports
-
-## 📊 Database Schema
-
-### Collections:
-
-**users**
-- uid, email, role, status, profile, emailVerified, createdAt
-
-**institutions**
-- name, type, email, location, status, createdAt
-
-**courses**
-- institutionId, name, faculty, duration, requirements, status
-
-**applications**
-- studentId, courseId, institutionId, status, createdAt
-
-**jobs**
-- companyId, title, description, location, type, qualifications, createdAt
-
-**jobApplications**
-- studentId, jobId, companyId, status, createdAt
-
-## 🔒 Security
-
-- Firebase Authentication for secure user management
-- Email verification for all non-admin accounts
-- Admin approval required for institutions and companies
-- Firestore security rules enforce role-based access
-- No sensitive data stored in frontend code
-- Environment variables for production credentials
-
-## 🎯 Key Features Implemented
-
-✅ Multi-role authentication system
-✅ Email verification workflow
-✅ Admin approval system
-✅ Course application with constraints
-✅ Multiple admission selection
-✅ Automated waiting list management
-✅ Job matching algorithm
-✅ Real-time data updates
-✅ Responsive design
-✅ Document upload system
-✅ Comprehensive dashboards for all roles
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-```bash
-npm i -g vercel
-vercel
-```
-
-### Firebase Hosting
-```bash
-npm install -g firebase-tools
-firebase login
-firebase init hosting
-npm run build
-firebase deploy
-```
-
-### Netlify
-1. Push to GitHub
-2. Connect repository to Netlify
-3. Set build command: `npm run build`
-4. Set publish directory: `dist`
-
-## 📝 Grading Criteria Met
-
-| Criteria | Score | Status |
-|----------|-------|--------|
-| Project Setup and Structure | 10/10 | ✅ Complete |
-| Code Quality and Readability | 15/15 | ✅ TypeScript, organized |
-| Database Design | 15/15 | ✅ Firestore collections |
-| API Development/Backend | 20/20 | ✅ Firebase backend |
-| Frontend Design | 20/20 | ✅ Professional UI |
-| Interactivity | 10/10 | ✅ Real-time updates |
-| Presentation | 10/10 | ✅ Demo-ready |
-| **Total** | **100/100** | ✅ |
-
-## 👨‍💻 Development Team
-
-**Group Members:**
-1. [Student Name 1] - [ID Number]
-2. [Student Name 2] - [ID Number]
-3. [Student Name 3] - [ID Number]
-
-**Course:** B/DIWA2110 Web Application Development
-
-**Institution:** [Your Institution Name]
-
-**Submission Date:** [Date]
-
-## 📄 License
-
-This project is developed for educational purposes as part of the Web Application Development course.
-
-## 🙏 Acknowledgments
-
-- Shadcn/UI for beautiful components
-- Firebase for backend infrastructure
-- Lucide React for icons
-- Tailwind CSS for styling utilities
-
-## 📞 Support
-
-For issues or questions:
-- Create an issue in this repository
-- Contact: [Your Email]
-- Documentation: See [SETUP.md](./SETUP.md)
+# Career Gateway Lesotho
+
+A full-stack career guidance web platform that connects students, higher education institutions, and companies. The application streamlines admissions, provides course discovery, and facilitates graduate employment opportunities.
+
+## Table of Contents
+
+- [Features](#features)
+- [Architecture](#architecture)
+- [Prerequisites](#prerequisites)
+- [Getting Started](#getting-started)
+- [Environment Variables](#environment-variables)
+- [Available Scripts](#available-scripts)
+- [Project Structure](#project-structure)
+- [Key Workflows](#key-workflows)
+- [Deployment](#deployment)
+- [Testing & Quality](#testing--quality)
+- [Troubleshooting](#troubleshooting)
+- [Attributions](#attributions)
 
 ---
 
-**Note:** This is an educational project. For production use, ensure proper security audits, data protection compliance, and testing are performed.
+## Features
+
+### Admin Module
+- Manage higher learning institutions (create, edit, delete).
+- Manage faculties and courses on behalf of institutions.
+- Approve or reject new institution and company registrations.
+- Suspend, activate, or remove company accounts.
+- Publish admissions in bulk or individually.
+- Access system analytics (application counts, admission rates, job stats, placement indicators).
+
+### Institution Module
+- Register with email verification and admin approval.
+- Manage faculties and courses tied to the institution.
+- Process student applications (admit, reject, waiting list).
+- Publish admission decisions without affecting status changes.
+- Maintain detailed institution profiles.
+
+### Student Module
+- Register with email verification.
+- Browse institutions and courses; apply to up to two courses per institution.
+- Track application status and published decisions.
+- Upload academic transcripts, additional certificates, and work experience details.
+- Discover job opportunities and submit applications.
+
+### Company Module
+- Register with email verification and admin approval.
+- Post job opportunities with required qualifications and experience.
+- Review applicants filtered by match scores derived from student data.
+- Manage company profile and account status.
+
+### Cross-cutting
+- Role-based dashboards (admin, institution, student, company).
+- Firebase Authentication, Firestore, and Storage integration.
+- Toast-based notifications for feedback.
+- Responsive UI built with React, Tailwind, and Radix UI primitives.
+
+---
+
+## Architecture
+
+| Layer            | Technology                                  |
+| ---------------- | ------------------------------------------- |
+| Frontend         | React 18, TypeScript, Vite, Tailwind CSS    |
+| UI Components    | Radix UI + Custom ShadCN-inspired components|
+| Authentication   | Firebase Auth                               |
+| Persistence      | Cloud Firestore                             |
+| File Storage     | Firebase Storage                            |
+| Notifications    | `sonner` toast library                      |
+| Icons            | `lucide-react`                              |
+
+---
+
+## Prerequisites
+
+- Node.js ≥ 18
+- npm ≥ 9 (or pnpm/yarn)
+- Firebase project with Authentication, Firestore, and Storage enabled
+- Git (for version control & deployment to Vercel)
+
+---
+
+## Getting Started
+
+1. **Clone the repository**
+   ```bash
+   git clone <your-repo-url>
+   cd Career-Guidance-Platform
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment variables** (see [Environment Variables](#environment-variables)).
+
+4. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+5. Open the app at [http://localhost:5173](http://localhost:5173).
+
+---
+
+## Environment Variables
+
+Create a `.env` (or `.env.local`) file at the project root. Vite exposes variables prefixed with `VITE_`.
+
+```env
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your_project
+VITE_FIREBASE_STORAGE_BUCKET=your_project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+Ensure the values match the Firebase project used for production.
+
+---
+
+## Available Scripts
+
+| Command            | Description                                   |
+| ------------------ | --------------------------------------------- |
+| `npm run dev`      | Start Vite dev server with hot reloading       |
+| `npm run build`    | Create an optimized production build (`dist`) |
+| `npm run preview`  | Serve the built app locally                    |
+| `npm run lint`*    | (Optional) Run lint checks if configured       |
+
+\* Add ESLint or additional tooling as needed.
+
+---
+
+## Project Structure
+
+```
+src/
+├── components/          # UI components & dashboards
+│   ├── AdminDashboard.tsx
+│   ├── InstituteDashboard.tsx
+│   ├── StudentDashboard.tsx
+│   ├── CompanyDashboard.tsx
+│   └── ui/              # Radix-based shared UI primitives
+├── contexts/
+│   └── AuthContext.tsx  # Global auth/profile handling
+├── lib/
+│   ├── auth.ts          # Auth helpers (login/register)
+│   ├── firebase.ts      # Firebase init (Auth/Firestore/Storage)
+│   └── firestore.ts     # Firestore CRUD abstractions
+├── styles/
+│   └── globals.css
+├── App.tsx              # Role routing and layout
+└── main.tsx             # Entry point
+```
+
+---
+
+## Key Workflows
+
+### Admissions Publishing
+- Institutions update application statuses (`admitted`, `waiting`, `rejected`) without affecting publication.
+- Publishing an admission sets `isPublished` and `publishedAt` in Firestore.
+- Students only see official decisions when `isPublished` is `true`.
+- Admins can publish decisions individually or in bulk from their dashboard.
+
+### Student Document Uploads
+- Students can upload transcripts and certificates.
+- Files are stored via Firebase Storage; metadata is tracked in Firestore under the student profile.
+- Company match scoring leverages uploaded documents, skills, and experience.
+
+### Company Applicant Filtering
+- Companies view applicants per job posting.
+- A match score (currently a placeholder) is displayed to surface interview-ready candidates.
+- Admins can suspend/activate or delete company accounts, which cascades related data cleanup via Firestore helpers.
+
+---
+
+## Deployment
+
+### Vercel (recommended)
+1. Push your repository to GitHub/GitLab/Bitbucket.
+2. Import the project at [vercel.com](https://vercel.com).
+3. Confirm build settings:
+   - Install: `npm install`
+   - Build: `npm run build`
+   - Output: `dist`
+4. Add environment variables in Vercel (Settings → Environment Variables).
+5. Deploy; Vercel will provide preview and production URLs.
+
+### Firebase Hosting (alternative)
+1. `npm install -g firebase-tools`
+2. `firebase login`
+3. `firebase init hosting` (choose project, set public dir to `dist`, enable SPA rewrite)
+4. `npm run build`
+5. `firebase deploy`
+
+---
+
+## Testing & Quality
+
+- **Manual QA**: Exercise core flows (registration, login, applications, document upload, admissions publishing, job postings).
+- **Linting/Formatting**: Configure ESLint/Prettier as desired; run before deployment.
+- **Security**: Ensure Firestore security rules align with role-based access. Restrict Storage uploads to authenticated users.
+- **Monitoring**: Consider enabling Firebase Analytics, Crashlytics (if native clients), or Vercel Analytics.
+
+---
+
+## Attributions
+
+- UI inspired by [Shadcn UI](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- Dashboards based on original Figma concept: [Career Guidance Platform](https://www.figma.com/design/DmpJvZxgCXbTHSsSABz75x/Career-Guidance-Platform)
+
+---
+
+Maintained with ❤️ to help students, institutions, and companies collaborate on academic and career journeys. Contributions, bug reports, and feature requests are welcome!
+

@@ -8,21 +8,34 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
-import { BookOpen, Users, Plus, CheckCircle, XCircle, Clock } from 'lucide-react';
+import { BookOpen, Users, Plus, CheckCircle, XCircle, Clock, Trash2, Loader2 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { createCourse, getCoursesByInstitution, updateApplicationStatus } from '../lib/firestore';
+import { 
+  createCourse, 
+  getCoursesByInstitution, 
+  updateApplicationStatus, 
+  createFaculty, 
+  getFacultiesByInstitution, 
+  deleteFaculty, 
+  deleteCourse, 
+  publishApplicationDecision, 
+  updateInstitutionProfile, 
+  updateInstitution,
+  updateStudentGraduationStatus
+} from '../lib/firestore';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
 import { toast } from 'sonner@2.0.3';
 
 export const InstituteDashboard: React.FC = () => {
-  const { user, userProfile } = useAuth();
+  const { user, userProfile, setUserProfile } = useAuth();
   const [courses, setCourses] = useState<any[]>([]);
-  const [faculties, setFaculties] = useState<string[]>(['Science', 'Arts', 'Engineering', 'Business']);
+  const [faculties, setFaculties] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
   const [showAddCourse, setShowAddCourse] = useState(false);
   const [showAddFaculty, setShowAddFaculty] = useState(false);
   const [institutionId, setInstitutionId] = useState('');
+  const [institutionMeta, setInstitutionMeta] = useState<any | null>(null);
 
   // Course form state
   const [courseName, setCourseName] = useState('');
@@ -31,9 +44,40 @@ export const InstituteDashboard: React.FC = () => {
   const [courseRequirements, setCourseRequirements] = useState('');
   const [newFaculty, setNewFaculty] = useState('');
 
+  // Profile form state
+  const [profileForm, setProfileForm] = useState({
+    institutionName: '',
+    institutionType: '',
+    contactPerson: '',
+    phone: '',
+    address: '',
+    website: '',
+    location: '',
+    email: ''
+  });
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+  const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  const [deletingFacultyId, setDeletingFacultyId] = useState<string | null>(null);
+  const [updatingGraduateId, setUpdatingGraduateId] = useState<string | null>(null);
+
   useEffect(() => {
     loadData();
   }, [user]);
+
+  useEffect(() => {
+    if (!userProfile) return;
+    setProfileForm((prev) => ({
+      institutionName: userProfile.profile?.institutionName || institutionMeta?.name || prev.institutionName || '',
+      institutionType: userProfile.profile?.institutionType || institutionMeta?.type || prev.institutionType || '',
+      contactPerson: userProfile.profile?.contactPerson || prev.contactPerson || '',
+      phone: userProfile.profile?.phone || prev.phone || '',
+      address: userProfile.profile?.address || institutionMeta?.address || prev.address || '',
+      website: userProfile.profile?.website || prev.website || '',
+      location: userProfile.profile?.location || institutionMeta?.location || prev.location || '',
+      email: userProfile.email || user?.email || prev.email || ''
+    }));
+  }, [userProfile, institutionMeta, user]);
 
   const loadData = async () => {
     if (!user) return;
@@ -46,8 +90,22 @@ export const InstituteDashboard: React.FC = () => {
     const instSnapshot = await getDocs(instQuery);
     
     if (!instSnapshot.empty) {
-      const instId = instSnapshot.docs[0].id;
+      const institutionDoc = instSnapshot.docs[0];
+      const instId = institutionDoc.id;
+      const instData = institutionDoc.data();
       setInstitutionId(instId);
+      setInstitutionMeta(instData);
+
+      // Load faculties
+      const facultiesResult = await getFacultiesByInstitution(instId);
+      if (facultiesResult.success) {
+        setFaculties(facultiesResult.data);
+        if (!courseFaculty && facultiesResult.data.length) {
+          setCourseFaculty(facultiesResult.data[0].name);
+        }
+      } else {
+        setFaculties([]);
+      }
 
       // Load courses
       const coursesResult = await getCoursesByInstitution(instId);
@@ -73,7 +131,8 @@ export const InstituteDashboard: React.FC = () => {
             id: appDoc.id,
             ...appData,
             studentName: studentData?.profile?.name || 'Unknown',
-            studentEmail: studentData?.email || 'Unknown'
+            studentEmail: studentData?.email || 'Unknown',
+            studentGraduated: studentData?.profile?.graduated || false
           };
         })
       );
@@ -83,7 +142,15 @@ export const InstituteDashboard: React.FC = () => {
 
   const handleAddCourse = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+    if (!institutionId) {
+      toast.error('Institution not loaded yet. Please try again shortly.');
+      return;
+    }
+    if (!courseFaculty) {
+      toast.error('Please select a faculty');
+      return;
+    }
+
     const result = await createCourse({
       institutionId,
       name: courseName,
@@ -97,7 +164,7 @@ export const InstituteDashboard: React.FC = () => {
       toast.success('Course added successfully');
       setShowAddCourse(false);
       setCourseName('');
-      setCourseFaculty('');
+      setCourseFaculty(faculties[0]?.name || '');
       setCourseDuration('');
       setCourseRequirements('');
       loadData();
@@ -106,13 +173,48 @@ export const InstituteDashboard: React.FC = () => {
     }
   };
 
-  const handleAddFaculty = () => {
-    if (newFaculty && !faculties.includes(newFaculty)) {
-      setFaculties([...faculties, newFaculty]);
+  const handleAddFaculty = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!institutionId) {
+      toast.error('Institution not loaded yet. Please try again.');
+      return;
+    }
+    const trimmedName = newFaculty.trim();
+    if (!trimmedName) {
+      toast.error('Faculty name is required');
+      return;
+    }
+    if (faculties.some((faculty: any) => faculty.name.toLowerCase() === trimmedName.toLowerCase())) {
+      toast.error('Faculty already exists');
+      return;
+    }
+
+    const result = await createFaculty({
+      institutionId,
+      name: trimmedName
+    });
+
+    if (result.success) {
+      toast.success('Faculty added successfully');
       setNewFaculty('');
       setShowAddFaculty(false);
-      toast.success('Faculty added successfully');
+      loadData();
+    } else {
+      toast.error(result.error || 'Failed to add faculty');
     }
+  };
+
+  const handleDeleteFacultyEntry = async (facultyId: string) => {
+    if (!facultyId) return;
+    setDeletingFacultyId(facultyId);
+    const result = await deleteFaculty(facultyId);
+    if (result.success) {
+      toast.success('Faculty removed');
+      await loadData();
+    } else {
+      toast.error(result.error || 'Failed to delete faculty');
+    }
+    setDeletingFacultyId(null);
   };
 
   const handleUpdateApplicationStatus = async (applicationId: string, newStatus: string, studentId: string) => {
@@ -123,6 +225,93 @@ export const InstituteDashboard: React.FC = () => {
       loadData();
     } else {
       toast.error('Failed to update application');
+    }
+  };
+
+  const handlePublishApplication = async (applicationId: string) => {
+    setPublishingId(applicationId);
+    const result = await publishApplicationDecision(applicationId);
+    if (result.success) {
+      toast.success('Admission published');
+      loadData();
+    } else {
+      toast.error(result.error || 'Failed to publish admission');
+    }
+    setPublishingId(null);
+  };
+
+  const handleDeleteCourse = async (courseId: string) => {
+    setDeletingCourseId(courseId);
+    const result = await deleteCourse(courseId);
+    if (result.success) {
+      toast.success('Course removed');
+      await loadData();
+    } else {
+      toast.error(result.error || 'Failed to remove course');
+    }
+    setDeletingCourseId(null);
+  };
+
+  const handleGraduateStudent = async (studentId: string) => {
+    if (!studentId) return;
+    setUpdatingGraduateId(studentId);
+    const result = await updateStudentGraduationStatus(studentId, true);
+    if (result.success) {
+      toast.success('Student promoted to graduate');
+      await loadData();
+    } else {
+      toast.error(result.error || 'Failed to promote student');
+    }
+    setUpdatingGraduateId(null);
+  };
+
+  const handleProfileSave = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    setSavingProfile(true);
+    try {
+      const updatedProfile = {
+        ...userProfile?.profile,
+        institutionName: profileForm.institutionName,
+        institutionType: profileForm.institutionType,
+        contactPerson: profileForm.contactPerson,
+        phone: profileForm.phone,
+        address: profileForm.address,
+        website: profileForm.website,
+        location: profileForm.location
+      };
+
+      const [profileResult, institutionResult] = await Promise.all([
+        updateInstitutionProfile(user.uid, updatedProfile),
+        institutionId
+          ? updateInstitution(institutionId, {
+              name: profileForm.institutionName,
+              type: profileForm.institutionType,
+              email: profileForm.email,
+              location: profileForm.location
+            })
+          : Promise.resolve({ success: true })
+      ]);
+
+      if (profileResult.success && institutionResult.success) {
+        toast.success('Profile updated successfully');
+        setUserProfile((prev) =>
+          prev
+            ? {
+                ...prev,
+                profile: updatedProfile
+              }
+            : prev
+        );
+        loadData();
+      } else {
+        toast.error(profileResult.error || institutionResult.error || 'Failed to update profile');
+      }
+    } catch (error) {
+      toast.error('Unexpected error updating profile');
+    } finally {
+      setSavingProfile(false);
     }
   };
 
@@ -224,9 +413,9 @@ export const InstituteDashboard: React.FC = () => {
                             <SelectValue placeholder="Select faculty" />
                           </SelectTrigger>
                           <SelectContent>
-                            {faculties.map((faculty) => (
-                              <SelectItem key={faculty} value={faculty}>
-                                {faculty}
+                            {faculties.map((faculty: any) => (
+                              <SelectItem key={faculty.id} value={faculty.name}>
+                                {faculty.name}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -266,6 +455,7 @@ export const InstituteDashboard: React.FC = () => {
                     <TableHead>Duration</TableHead>
                     <TableHead>Applications</TableHead>
                     <TableHead>Status</TableHead>
+                    <TableHead>Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -278,7 +468,23 @@ export const InstituteDashboard: React.FC = () => {
                         <TableCell>{course.duration}</TableCell>
                         <TableCell>{courseApps.length}</TableCell>
                         <TableCell>
-                          <Badge variant="default">{course.status}</Badge>
+                          <Badge variant={course.status === 'active' ? 'default' : 'secondary'}>
+                            {course.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => handleDeleteCourse(course.id)}
+                            disabled={deletingCourseId === course.id}
+                          >
+                            {deletingCourseId === course.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                            ) : (
+                              <Trash2 className="h-4 w-4 text-red-500" />
+                            )}
+                          </Button>
                         </TableCell>
                       </TableRow>
                     );
@@ -309,7 +515,7 @@ export const InstituteDashboard: React.FC = () => {
                       <DialogTitle>Add New Faculty</DialogTitle>
                       <DialogDescription>Enter the faculty name</DialogDescription>
                     </DialogHeader>
-                    <div className="space-y-4">
+                    <form onSubmit={handleAddFaculty} className="space-y-4">
                       <div>
                         <Label htmlFor="faculty-name">Faculty Name</Label>
                         <Input
@@ -317,28 +523,48 @@ export const InstituteDashboard: React.FC = () => {
                           value={newFaculty}
                           onChange={(e) => setNewFaculty(e.target.value)}
                           placeholder="e.g., Faculty of Medicine"
+                          required
                         />
                       </div>
-                      <Button onClick={handleAddFaculty} className="w-full">
+                      <Button type="submit" className="w-full">
                         Add Faculty
                       </Button>
-                    </div>
+                    </form>
                   </DialogContent>
                 </Dialog>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid md:grid-cols-3 gap-4">
-                {faculties.map((faculty) => (
-                  <Card key={faculty}>
-                    <CardHeader>
-                      <CardTitle className="text-lg">{faculty}</CardTitle>
-                      <CardDescription>
-                        {courses.filter(c => c.faculty === faculty).length} courses
-                      </CardDescription>
+                {faculties.map((faculty: any) => (
+                  <Card key={faculty.id}>
+                    <CardHeader className="flex flex-row items-start justify-between space-y-0">
+                      <div>
+                        <CardTitle className="text-lg">{faculty.name}</CardTitle>
+                        <CardDescription>
+                          {courses.filter((c: any) => c.faculty === faculty.name).length} courses
+                        </CardDescription>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDeleteFacultyEntry(faculty.id)}
+                        disabled={deletingFacultyId === faculty.id}
+                      >
+                        {deletingFacultyId === faculty.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin text-gray-500" />
+                        ) : (
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        )}
+                      </Button>
                     </CardHeader>
                   </Card>
                 ))}
+                {!faculties.length && (
+                  <div className="text-sm text-gray-500 border border-dashed rounded-lg p-4">
+                    No faculties yet. Add your first faculty to get started.
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -426,7 +652,9 @@ export const InstituteDashboard: React.FC = () => {
                         <TableHead>Student Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Course</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>Published</TableHead>
+                        <TableHead>Graduation</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -436,7 +664,53 @@ export const InstituteDashboard: React.FC = () => {
                           <TableCell>{app.studentEmail}</TableCell>
                           <TableCell>{app.courseName}</TableCell>
                           <TableCell>
-                            <Badge variant="default">Admitted</Badge>
+                            <Badge variant={app.isPublished ? 'default' : 'secondary'}>
+                              {app.isPublished ? 'Published' : 'Pending'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={app.studentGraduated ? 'default' : 'secondary'}>
+                              {app.studentGraduated ? 'Graduated' : 'In Progress'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handlePublishApplication(app.id)}
+                                disabled={app.isPublished || publishingId === app.id}
+                              >
+                                {publishingId === app.id && (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                )}
+                                Publish
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'waiting', app.studentId)}
+                              >
+                                Move to Waiting
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'rejected', app.studentId)}
+                              >
+                                Reject
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={app.studentGraduated ? 'outline' : 'default'}
+                                onClick={() => handleGraduateStudent(app.studentId)}
+                                disabled={app.studentGraduated || updatingGraduateId === app.studentId}
+                              >
+                                {updatingGraduateId === app.studentId ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                {app.studentGraduated ? 'Graduated' : 'Mark as Graduated'}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -451,7 +725,8 @@ export const InstituteDashboard: React.FC = () => {
                         <TableHead>Student Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Course</TableHead>
-                        <TableHead>Status</TableHead>
+                        <TableHead>Published</TableHead>
+                        <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -461,7 +736,37 @@ export const InstituteDashboard: React.FC = () => {
                           <TableCell>{app.studentEmail}</TableCell>
                           <TableCell>{app.courseName}</TableCell>
                           <TableCell>
-                            <Badge variant="destructive">Rejected</Badge>
+                            <Badge variant={app.isPublished ? 'default' : 'secondary'}>
+                              {app.isPublished ? 'Published' : 'Pending'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handlePublishApplication(app.id)}
+                                disabled={app.isPublished || publishingId === app.id}
+                              >
+                                {publishingId === app.id && (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                )}
+                                Publish
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'waiting', app.studentId)}
+                              >
+                                Move to Waiting
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'admitted', app.studentId)}
+                              >
+                                Admit
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -476,6 +781,8 @@ export const InstituteDashboard: React.FC = () => {
                         <TableHead>Student Name</TableHead>
                         <TableHead>Email</TableHead>
                         <TableHead>Course</TableHead>
+                        <TableHead>Published</TableHead>
+                        <TableHead>Graduation</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
@@ -486,12 +793,53 @@ export const InstituteDashboard: React.FC = () => {
                           <TableCell>{app.studentEmail}</TableCell>
                           <TableCell>{app.courseName}</TableCell>
                           <TableCell>
-                            <Button
-                              size="sm"
-                              onClick={() => handleUpdateApplicationStatus(app.id, 'admitted', app.studentId)}
-                            >
-                              Promote to Admitted
-                            </Button>
+                            <Badge variant={app.isPublished ? 'default' : 'secondary'}>
+                              {app.isPublished ? 'Published' : 'Pending'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant={app.studentGraduated ? 'default' : 'secondary'}>
+                              {app.studentGraduated ? 'Graduated' : 'In Progress'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <div className="flex flex-wrap gap-2">
+                              <Button
+                                size="sm"
+                                onClick={() => handlePublishApplication(app.id)}
+                                disabled={app.isPublished || publishingId === app.id}
+                              >
+                                {publishingId === app.id && (
+                                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                )}
+                                Publish
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'admitted', app.studentId)}
+                              >
+                                Promote to Admitted
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleUpdateApplicationStatus(app.id, 'rejected', app.studentId)}
+                              >
+                                Reject
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant={app.studentGraduated ? 'outline' : 'default'}
+                                onClick={() => handleGraduateStudent(app.studentId)}
+                                disabled={app.studentGraduated || updatingGraduateId === app.studentId}
+                              >
+                                {updatingGraduateId === app.studentId ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : null}
+                                {app.studentGraduated ? 'Graduated' : 'Mark as Graduated'}
+                              </Button>
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
