@@ -9,38 +9,56 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from './ui/dialog';
 import { Checkbox } from './ui/checkbox';
-import { 
-  Building2, 
-  GraduationCap, 
-  Briefcase, 
-  Users, 
-  Plus, 
-  Trash2, 
-  Edit, 
-  CheckCircle, 
-  XCircle, 
-  Layers, 
-  BookOpen, 
-  Loader2 
+import {
+  Building2,
+  GraduationCap,
+  Briefcase,
+  Users,
+  Plus,
+  Trash2,
+  Edit,
+  CheckCircle,
+  XCircle,
+  Layers,
+  BookOpen,
+  Loader2,
+  TrendingUp
 } from 'lucide-react';
-import { 
-  createInstitution, 
-  getInstitutions, 
-  deleteInstitution, 
-  updateInstitution, 
-  createFaculty, 
-  getFacultiesByInstitution, 
-  deleteFaculty, 
-  createCourse, 
-  getCoursesByInstitution, 
-  deleteCourse, 
-  updateApplicationStatus, 
-  publishApplicationDecision, 
-  bulkPublishApplications, 
-  getAllApplications, 
-  getJobPostings, 
-  getAllJobApplications, 
-  deleteCompanyAccount 
+import {
+  PieChart,
+  Pie,
+  Cell,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer
+} from 'recharts';
+import {
+  createInstitution,
+  getInstitutions,
+  deleteInstitution,
+  updateInstitution,
+  createFaculty,
+  getFacultiesByInstitution,
+  deleteFaculty,
+  createCourse,
+  getCoursesByInstitution,
+  deleteCourse,
+  updateApplicationStatus,
+  publishApplicationDecision,
+  bulkPublishApplications,
+  getAllApplications,
+  getJobPostings,
+  getAllJobApplications,
+  deleteCompanyAccount
 } from '../lib/firestore';
 import { collection, query, where, getDocs, updateDoc, doc } from 'firebase/firestore';
 import { db } from '../lib/firebase';
@@ -667,8 +685,8 @@ export const AdminDashboard: React.FC = () => {
                           >
                             <Layers className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => handleDeleteInstitution(inst.id)}
                           >
@@ -712,16 +730,16 @@ export const AdminDashboard: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="default"
                             onClick={() => handleApproveUser(user.id)}
                           >
                             <CheckCircle className="w-4 h-4 mr-1" />
                             Approve
                           </Button>
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="destructive"
                             onClick={() => handleRejectUser(user.id)}
                           >
@@ -804,10 +822,10 @@ export const AdminDashboard: React.FC = () => {
                               application.status === 'admitted'
                                 ? 'default'
                                 : application.status === 'rejected'
-                                ? 'destructive'
-                                : application.status === 'waiting'
-                                ? 'secondary'
-                                : 'outline'
+                                  ? 'destructive'
+                                  : application.status === 'waiting'
+                                    ? 'secondary'
+                                    : 'outline'
                             }
                           >
                             {application.status}
@@ -897,8 +915,8 @@ export const AdminDashboard: React.FC = () => {
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-2">
-                          <Button 
-                            size="sm" 
+                          <Button
+                            size="sm"
                             variant="outline"
                             onClick={() => handleSuspendCompany(company.id)}
                             disabled={company.status === 'suspended'}
@@ -964,14 +982,202 @@ export const AdminDashboard: React.FC = () => {
         </TabsContent>
 
         <TabsContent value="reports">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Reports</CardTitle>
-              <CardDescription>View comprehensive system statistics and analytics</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            {/* Application Status Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Application Status Distribution</CardTitle>
+                <CardDescription>Breakdown of all applications by current status</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <PieChart>
+                    <Pie
+                      data={[
+                        {
+                          name: 'Pending',
+                          value: applications.filter((app: any) => app.status === 'pending').length,
+                          color: '#F59E0B'
+                        },
+                        {
+                          name: 'Admitted',
+                          value: applications.filter((app: any) => app.status === 'admitted').length,
+                          color: '#10B981'
+                        },
+                        {
+                          name: 'Rejected',
+                          value: applications.filter((app: any) => app.status === 'rejected').length,
+                          color: '#EF4444'
+                        },
+                        {
+                          name: 'Waiting List',
+                          value: applications.filter((app: any) => app.status === 'waiting').length,
+                          color: '#8B5CF6'
+                        }
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={false}
+                      label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                      outerRadius={100}
+                      fill="#8884d8"
+                      dataKey="value"
+                    >
+                      {[
+                        { name: 'Pending', value: applications.filter((app: any) => app.status === 'pending').length, color: '#F59E0B' },
+                        { name: 'Admitted', value: applications.filter((app: any) => app.status === 'admitted').length, color: '#10B981' },
+                        { name: 'Rejected', value: applications.filter((app: any) => app.status === 'rejected').length, color: '#EF4444' },
+                        { name: 'Waiting List', value: applications.filter((app: any) => app.status === 'waiting').length, color: '#8B5CF6' }
+                      ].map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                    <Legend />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Institution Performance */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Institution Performance</CardTitle>
+                <CardDescription>Applications received per institution</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart
+                    data={institutions.map((inst: any) => ({
+                      name: inst.name,
+                      applications: applications.filter((app: any) => app.institutionId === inst.id).length,
+                      admitted: applications.filter((app: any) => app.institutionId === inst.id && app.status === 'admitted').length
+                    }))}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" angle={-45} textAnchor="end" height={100} />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar dataKey="applications" fill="#3B82F6" name="Total Applications" />
+                    <Bar dataKey="admitted" fill="#10B981" name="Admitted" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* User Growth Trends */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Platform Growth</CardTitle>
+                <CardDescription>User registrations across different roles</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 border rounded-lg bg-blue-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600">Total Students</div>
+                        <div className="text-2xl font-bold text-blue-600">{students.length}</div>
+                      </div>
+                      <Users className="h-8 w-8 text-blue-600" />
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-green-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600">Total Institutions</div>
+                        <div className="text-2xl font-bold text-green-600">{institutions.length}</div>
+                      </div>
+                      <Building2 className="h-8 w-8 text-green-600" />
+                    </div>
+                  </div>
+                  <div className="p-4 border rounded-lg bg-purple-50">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-sm text-gray-600">Total Companies</div>
+                        <div className="text-2xl font-bold text-purple-600">{companies.length}</div>
+                      </div>
+                      <Briefcase className="h-8 w-8 text-purple-600" />
+                    </div>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <AreaChart
+                    data={[
+                      { name: 'Current', students: students.length, institutions: institutions.length, companies: companies.length }
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Area type="monotone" dataKey="students" stackId="1" stroke="#3B82F6" fill="#3B82F6" name="Students" />
+                    <Area type="monotone" dataKey="institutions" stackId="1" stroke="#10B981" fill="#10B981" name="Institutions" />
+                    <Area type="monotone" dataKey="companies" stackId="1" stroke="#8B5CF6" fill="#8B5CF6" name="Companies" />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Job Market Activity */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Job Market Activity</CardTitle>
+                <CardDescription>Active job postings and application trends</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-sm text-gray-600">Active Job Postings</div>
+                    <div className="text-2xl font-bold text-gray-900 mt-2">{reportStats.activeJobs}</div>
+                    <p className="text-xs text-gray-500 mt-1 flex items-center">
+                      <TrendingUp className="h-3 w-3 mr-1" />
+                      Available opportunities
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-sm text-gray-600">Job Applications</div>
+                    <div className="text-2xl font-bold text-gray-900 mt-2">{reportStats.jobApplications}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Total applications submitted
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-sm text-gray-600">Placement Rate</div>
+                    <div className="text-2xl font-bold text-gray-900 mt-2">{reportStats.placementRate}%</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Job applications vs published admissions
+                    </p>
+                  </div>
+                </div>
+                <ResponsiveContainer width="100%" height={250}>
+                  <LineChart
+                    data={[
+                      { name: 'Overview', jobs: reportStats.activeJobs, applications: reportStats.jobApplications }
+                    ]}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="jobs" stroke="#8B5CF6" strokeWidth={2} name="Active Jobs" />
+                    <Line type="monotone" dataKey="applications" stroke="#3B82F6" strokeWidth={2} name="Applications" />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Key Metrics Summary */}
+            <Card>
+              <CardHeader>
+                <CardTitle>System Metrics Summary</CardTitle>
+                <CardDescription>Comprehensive overview of platform performance</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div className="p-4 border rounded-lg">
                     <div className="text-gray-600 text-sm">Total Applications</div>
                     <div className="text-gray-900 mt-2 text-xl font-semibold">
@@ -979,15 +1185,6 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
                       {reportStats.published} published • {reportStats.admitted} admitted
-                    </p>
-                  </div>
-                  <div className="p-4 border rounded-lg">
-                    <div className="text-gray-600 text-sm">Active Job Postings</div>
-                    <div className="text-gray-900 mt-2 text-xl font-semibold">
-                      {reportStats.activeJobs}
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {reportStats.jobApplications} job applications submitted
                     </p>
                   </div>
                   <div className="p-4 border rounded-lg">
@@ -1000,18 +1197,27 @@ export const AdminDashboard: React.FC = () => {
                     </p>
                   </div>
                   <div className="p-4 border rounded-lg">
-                    <div className="text-gray-600 text-sm">Placement Rate</div>
+                    <div className="text-gray-600 text-sm">Active Institutions</div>
                     <div className="text-gray-900 mt-2 text-xl font-semibold">
-                      {reportStats.placementRate}%
+                      {institutions.filter((inst: any) => inst.status === 'active').length}
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Estimated employment readiness based on job activity
+                      Out of {institutions.length} total institutions
+                    </p>
+                  </div>
+                  <div className="p-4 border rounded-lg">
+                    <div className="text-gray-600 text-sm">Active Companies</div>
+                    <div className="text-gray-900 mt-2 text-xl font-semibold">
+                      {companies.filter((comp: any) => comp.status === 'active').length}
+                    </div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Out of {companies.length} total companies
                     </p>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 

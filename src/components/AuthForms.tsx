@@ -44,13 +44,13 @@ export const AuthForms: React.FC<AuthFormsProps> = ({ initialMode, onBack }) => 
     setLoading(true);
 
     const result = await loginUser(loginEmail, loginPassword);
-    
+
     if (result.success) {
       toast.success('Login successful!');
     } else {
       toast.error(result.error || 'Login failed');
     }
-    
+
     setLoading(false);
   };
 
@@ -90,22 +90,22 @@ export const AuthForms: React.FC<AuthFormsProps> = ({ initialMode, onBack }) => 
     }
 
     const result = await registerUser(registerEmail, registerPassword, role, profileData);
-    
+
     if (result.success) {
       toast.success('Registration successful! Please check your email to verify your account.');
       setMode('login');
     } else {
       toast.error(result.error || 'Registration failed');
     }
-    
+
     setLoading(false);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-12 px-4">
       <div className="max-w-md mx-auto">
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={onBack}
           className="mb-4"
         >
@@ -115,7 +115,7 @@ export const AuthForms: React.FC<AuthFormsProps> = ({ initialMode, onBack }) => 
 
         <Card>
           <CardHeader>
-            <CardTitle>Welcome to Career Gateway</CardTitle>
+            <CardTitle>Welcome to Makaota</CardTitle>
             <CardDescription>
               {mode === 'login' ? 'Login to your account' : 'Create a new account'}
             </CardDescription>

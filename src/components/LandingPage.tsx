@@ -16,12 +16,12 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectRole }) => {
           <div className="flex justify-center mb-6">
             <GraduationCap className="w-20 h-20 text-blue-600" />
           </div>
-          <h1 className="text-blue-900 mb-4">Career Gateway Lesotho</h1>
+          <h1 className="text-blue-900 mb-4">Makaota Career & Education Platform</h1>
           <p className="text-gray-700 max-w-2xl mx-auto">
-            Your comprehensive platform for higher education discovery, course applications, 
-            and career placement in Lesotho. Connect students with institutions and employers.
+            Your comprehensive platform for higher education discovery, course applications,
+            and career placement. Connect students with institutions and employers.
           </p>
-          
+
           <div className="flex justify-center gap-4 mt-8">
             <Button onClick={() => onSelectRole('login')} size="lg">
               Login
@@ -29,6 +29,27 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectRole }) => {
             <Button onClick={() => onSelectRole('register')} variant="outline" size="lg">
               Register
             </Button>
+          </div>
+        </div>
+
+        {/* Creators Section */}
+        <div className="mb-12 pb-8 border-b border-gray-200">
+          <div className="text-center">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Created By</h3>
+            <div className="flex flex-wrap justify-center gap-6 text-gray-600">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span>Thato Sekhantso</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span>Reabetsoe Mokeke</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
+                <span>Leemisa Makoetlane</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -90,7 +111,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onSelectRole }) => {
             <div>
               <h3 className="text-gray-900 mb-2">For Students</h3>
               <ul className="space-y-2 text-gray-600">
-                <li>• Browse higher learning institutions in Lesotho</li>
+                <li>• Browse higher learning institutions</li>
                 <li>• Apply for up to 2 courses per institution</li>
                 <li>• Track application status in real-time</li>
                 <li>• Upload transcripts and certificates</li>

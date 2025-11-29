@@ -1,6 +1,6 @@
-# Career Guidance Platform
+# Makaota Career & Education Platform
 
-A full-stack career guidance web platform that connects students, higher education institutions, and companies. The application streamlines admissions, provides course discovery, and facilitates graduate employment opportunities.
+A full-stack career guidance and education platform that connects students, higher education institutions, and companies. The application streamlines admissions, provides course discovery, and facilitates graduate employment opportunities.
 
 ## Table of Contents
 
@@ -85,7 +85,7 @@ A full-stack career guidance web platform that connects students, higher educati
 1. **Clone the repository**
    ```bash
    git clone <your-repo-url>
-   cd Career-Guidance-Platform
+   cd Makaota-Career-Education-Platform
    ```
 
 2. **Install dependencies**
@@ -100,7 +100,7 @@ A full-stack career guidance web platform that connects students, higher educati
    npm run dev
    ```
 
-5. Open the app at [http://localhost:5173](http://localhost:5173).
+5. Open the app at [http://localhost:3000](http://localhost:3000).
 
 ---
 
@@ -213,7 +213,7 @@ src/
 
 - UI inspired by [Shadcn UI](https://ui.shadcn.com/)
 - Icons from [Lucide](https://lucide.dev/)
-- Dashboards based on original Figma concept: [Career Guidance Platform](https://www.figma.com/design/DmpJvZxgCXbTHSsSABz75x/Career-Guidance-Platform)
+
 
 ---
 

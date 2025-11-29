@@ -1,13 +1,13 @@
 // Firestore database helper functions
-import { 
-  collection, 
-  doc, 
-  addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  getDoc, 
-  getDocs, 
-  query, 
+import {
+  collection,
+  doc,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  getDoc,
+  getDocs,
+  query,
   where,
   orderBy,
   limit,
@@ -44,7 +44,7 @@ export const updateInstitution = async (id: string, data: any) => {
 export const deleteInstitution = async (id: string) => {
   try {
     const batch = writeBatch(db);
-    
+
     // Delete institution reference
     batch.delete(doc(db, 'institutions', id));
 
@@ -108,7 +108,7 @@ export const createCourse = async (data: any) => {
 export const getCoursesByInstitution = async (institutionId: string) => {
   try {
     const q = query(
-      collection(db, 'courses'), 
+      collection(db, 'courses'),
       where('institutionId', '==', institutionId)
     );
     const querySnapshot = await getDocs(q);
@@ -171,16 +171,24 @@ export const createFaculty = async (data: any) => {
 
 export const getFacultiesByInstitution = async (institutionId: string) => {
   try {
+    // Fetch all faculties for this institution and sort in memory
     const q = query(
       collection(db, 'faculties'),
-      where('institutionId', '==', institutionId),
-      orderBy('createdAt', 'asc')
+      where('institutionId', '==', institutionId)
     );
     const querySnapshot = await getDocs(q);
     const faculties = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
+
+    // Sort by creation date in memory
+    faculties.sort((a: any, b: any) => {
+      const aTime = a.createdAt?.seconds || 0;
+      const bTime = b.createdAt?.seconds || 0;
+      return aTime - bTime; // Ascending order (oldest first)
+    });
+
     return { success: true, data: faculties };
   } catch (error: any) {
     return { success: false, error: error.message };
@@ -243,7 +251,7 @@ export const createApplication = async (data: any) => {
       where('institutionId', '==', data.institutionId)
     );
     const existingApps = await getDocs(q);
-    
+
     if (existingApps.size >= 2) {
       return { success: false, error: 'Maximum 2 applications per institution' };
     }
@@ -279,7 +287,7 @@ export const getApplicationsByStudent = async (studentId: string) => {
 
 export const updateApplicationStatus = async (id: string, status: string, institutionId: string, studentId: string) => {
   try {
-    await updateDoc(doc(db, 'applications', id), { 
+    await updateDoc(doc(db, 'applications', id), {
       status,
       updatedAt: Timestamp.now()
     });
@@ -292,7 +300,7 @@ export const updateApplicationStatus = async (id: string, status: string, instit
         where('status', '==', 'admitted')
       );
       const admittedApps = await getDocs(q);
-      
+
       // Student needs to select one institution if admitted to multiple
       if (admittedApps.size > 1) {
         // This will be handled by student selection
@@ -362,17 +370,23 @@ export const createJobPosting = async (data: any) => {
 
 export const getJobPostings = async () => {
   try {
-    const q = query(
-      collection(db, 'jobs'),
-      where('status', '==', 'active'),
-      orderBy('createdAt', 'desc')
-    );
-    const querySnapshot = await getDocs(q);
-    const jobs = querySnapshot.docs.map(doc => ({
+    // Fetch all jobs and filter in memory to avoid composite index requirement
+    const querySnapshot = await getDocs(collection(db, 'jobs'));
+    const allJobs = querySnapshot.docs.map(doc => ({
       id: doc.id,
       ...doc.data()
     }));
-    return { success: true, data: jobs };
+
+    // Filter active jobs and sort by creation date
+    const activeJobs = allJobs
+      .filter((job: any) => job.status === 'active')
+      .sort((a: any, b: any) => {
+        const aTime = a.createdAt?.seconds || 0;
+        const bTime = b.createdAt?.seconds || 0;
+        return bTime - aTime; // Descending order (newest first)
+      });
+
+    return { success: true, data: activeJobs };
   } catch (error: any) {
     return { success: false, error: error.message };
   }

@@ -30,7 +30,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center gap-2">
               <GraduationCap className="w-8 h-8 text-blue-600" />
-              <span className="text-blue-600">Career Gateway Lesotho</span>
+              <span className="text-blue-600">Makaota Career & Education Platform</span>
             </div>
 
             {user && userProfile && (
@@ -47,7 +47,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
             )}
 
             {user && (
-              <button 
+              <button
                 className="md:hidden"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
@@ -77,7 +77,7 @@ export const Layout: React.FC<LayoutProps> = ({ children }) => {
       <footer className="bg-white border-t border-gray-200 mt-auto">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-gray-600">
-            © 2025 Career Gateway Lesotho. All rights reserved.
+            © 2025 Makaota Career & Education Platform. All rights reserved.
           </p>
         </div>
       </footer>

@@ -47,7 +47,7 @@ export const StudentDashboard: React.FC = () => {
     const appResult = await getApplicationsByStudent(user.uid);
     if (appResult.success) {
       setApplications(appResult.data);
-      
+
       // Check for multiple admissions
       const admitted = appResult.data.filter((app: any) => app.status === 'admitted');
       if (admitted.length > 1) {
@@ -101,12 +101,12 @@ export const StudentDashboard: React.FC = () => {
     try {
       // Get all admitted applications for this student
       const admittedApps = applications.filter((app: any) => app.status === 'admitted');
-      
+
       // Delete all other admitted applications
       for (const app of admittedApps) {
         if (app.id !== applicationId) {
           await deleteDoc(doc(db, 'applications', app.id));
-          
+
           // Get waiting list for that institution/course
           const waitingQuery = query(
             collection(db, 'applications'),
@@ -115,7 +115,7 @@ export const StudentDashboard: React.FC = () => {
             where('status', '==', 'waiting')
           );
           const waitingSnapshot = await getDocs(waitingQuery);
-          
+
           // Promote first waiting student to admitted
           if (!waitingSnapshot.empty) {
             const firstWaiting = waitingSnapshot.docs[0];
@@ -301,11 +301,11 @@ export const StudentDashboard: React.FC = () => {
                         Applied: {new Date(app.createdAt?.seconds * 1000).toLocaleDateString()}
                       </div>
                     </div>
-                    <Badge 
+                    <Badge
                       variant={
-                        app.status === 'admitted' ? 'default' : 
-                        app.status === 'rejected' ? 'destructive' : 
-                        'secondary'
+                        app.status === 'admitted' ? 'default' :
+                          app.status === 'rejected' ? 'destructive' :
+                            'secondary'
                       }
                     >
                       {app.status}
@@ -396,7 +396,7 @@ export const StudentDashboard: React.FC = () => {
                     />
                   </div>
                   <p className="text-sm text-gray-500 mt-1">
-                    Upload your official transcript (PDF format recommended)
+                    Optional: Upload your official transcript for better job matching (PDF format recommended)
                   </p>
                 </div>
 
